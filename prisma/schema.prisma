@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  csvFiles  CsvFile[]
+}
+
+model CsvFile {
+  id            String   @id @default(uuid())
+  userId        String
+  fileName      String
+  originalName  String
+  uploadedAt    DateTime @default(now())
+  columnHeaders String[]
+  rowCount      Int
+  batchType     String?
+  fieldMappings Json?
+  rows          CsvRow[]
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CsvRow {
+  id        String   @id @default(uuid())
+  csvFileId String
+  rowData   Json
+  rowIndex  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  csvFile   CsvFile  @relation(fields: [csvFileId], references: [id], onDelete: Cascade)
+
+  @@index([csvFileId])
+  @@index([csvFileId, rowIndex])
+}
